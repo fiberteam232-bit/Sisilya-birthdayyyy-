@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { 
+      margin: 0; 
+      background: #0f172a; 
+      color: white; 
+      font-family: sans-serif; 
+      text-align: center; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh; 
+      overflow-x: hidden; 
+    }
+
+    /* Screen 1: Main Question Section */
+    #main {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.75)), 
+                  url("https://files.catbox.moe/r1x66d.jpg") center/cover no-repeat;
+    }
+    
+    #question {
+      font-size: 1.8rem;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    }
+
+    .btn-group { display: flex; justify-content: center; gap: 20px; margin-top: 30px; }
+    button { padding: 15px 30px; font-size: 1.2rem; font-weight: bold; border: 3px solid #000; border-radius: 12px; cursor: pointer; transition: transform 0.2s; }
+    .yes { background: #22c55e; color: #000; }
+    .no { background: #ef4444; color: #000; position: relative; }
+
+    /* Screen 2 Fullscreen Background (Replaces blue background) */
+    #screen2-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.75)), 
+                  url("https://files.catbox.moe/chkb1c.jpg") center/cover no-repeat;
+      z-index: 50;
+    }
+
+    /* Dropping Birthday Banner / Card */
+    #card { 
+      position: fixed; 
+      top: -100%; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      width: 85%; 
+      max-width: 350px; 
+      background: #1e293b; 
+      border: 4px solid #38bdf8; 
+      border-radius: 20px; 
+      padding: 20px; 
+      transition: top 0.6s ease; 
+      z-index: 100; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    #card.show { top: 12%; }
+    
+    .avatar { 
+      width: 140px; 
+      height: 140px; 
+      margin: 15px auto; 
+      border-radius: 50%; 
+      border: 3px solid #38bdf8; 
+      overflow: hidden; 
+      background: #0f172a; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .next-card-btn { 
+      background: #38bdf8; 
+      color: #000; 
+      width: 100%; 
+      margin-top: 15px; 
+      padding: 14px;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* REAL 3D ENVELOPE STYLES */
+    #envelope-wrapper {
+      display: none;
+      position: fixed;
+      top: 25%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 150;
+      cursor: pointer;
+    }
+
+    .envelope {
+      position: relative;
+      width: 300px;
+      height: 190px;
+      background: #d4a373;
+      border-radius: 6px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    }
+
+    /* Envelope Flaps */
+    .flap-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 150px solid transparent;
+      border-right: 150px solid transparent;
+      border-top: 110px solid #bc8a5f;
+      transform-origin: top;
+      transition: transform 0.6s ease;
+      z-index: 5;
+    }
+
+    .flap-left {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-top: 95px solid transparent;
+      border-bottom: 95px solid transparent;
+      border-left: 160px solid #a47148;
+      z-index: 3;
+    }
+
+    .flap-right {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-top: 95px solid transparent;
+      border-bottom: 95px solid transparent;
+      border-right: 160px solid #a47148;
+      z-index: 3;
+    }
+
+    .flap-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 150px solid transparent;
+      border-right: 150px solid transparent;
+      border-bottom: 110px solid #b07d52;
+      z-index: 4;
+    }
+
+    /* Wax Seal Stamp */
+    .wax-seal {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 52px;
+      height: 52px;
+      background: radial-gradient(circle at 30% 30%, #e63946, #8d0801);
+      border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 0 6px rgba(0,0,0,0.4);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffb703;
+      font-size: 1.4rem;
+      font-weight: bold;
+      border: 2px dashed #b7094c;
+      transition: opacity 0.4s, transform 0.4s;
+    }
+
+    .seal-hint {
+      position: absolute;
+      bottom: -35px;
+      width: 100%;
+      color: #38bdf8;
+      font-weight: bold;
+      font-size: 0.95rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    /* Folded Letter Inside Envelope */
+    .inner-letter {
+      position: absolute;
+      bottom: 10px;
+      left: 15px;
+      width: 270px;
+      height: 160px;
+      background: url("https://files.catbox.moe/bzbisu.jpg") center/cover no-repeat;
+      border-radius: 4px;
+      z-index: 2;
+      transition: transform 0.8s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+      font-family: 'Georgia', serif;
+      font-weight: bold;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    /* OPENED FOLDED LETTER PAGE */
+    #letter-page {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0f172a;
+      z-index: 200;
+      overflow-y: auto;
+      padding: 30px 15px;
+      box-sizing: border-box;
+    }
+
+    .parchment {
+      position: relative;
+      max-width: 500px;
+      margin: 0 auto;
+      background: linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.65)), 
+                  url("https://files.catbox.moe/bzbisu.jpg") center/cover no-repeat;
+      color: #ffffff;
+      border: 2px solid #38bdf8;
+      border-radius: 12px;
+      padding: 40px 30px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+      font-family: 'Georgia', serif;
+      text-align: center;
+      line-height: 1.8;
+      overflow: hidden;
+    }
+
+    /* Fold Lines / Wrinkles Effect */
+    .fold-h {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.18), rgba(255,255,255,0.08));
+      box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      pointer-events: none;
+    }
+    
+    .fold-v {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.18), rgba(255,255,255,0.08));
+      box-shadow: 1px 0 2px rgba(0,0,0,0.5);
+      pointer-events: none;
+    }
+
+    .parchment h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-top: 0;
+      color: #38bdf8;
+      border-bottom: 2px dashed #38bdf8;
+      padding-bottom: 12px;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+    }
+
+    .letter-body {
+      font-size: 1.05rem;
+      white-space: pre-line;
+      margin-top: 25px;
+      position: relative;
+      z-index: 2;
+      text-align: right;
+      direction: rtl;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Screen 1: Question Section -->
+  <div id="main">
+    <h2 id="question">Are you the birthday girl?</h2>
+    <div class="btn-group">
+      <button class="yes" id="yesBtn" onclick="doYes()">YES</button>
+      <button class="no" id="noBtn" onclick="doNo()">NO</button>
+    </div>
+  </div>
+
+  <!-- Screen 2: Background Image -->
+  <div id="screen2-bg"></div>
+
+  <!-- Dropping Birthday Banner / Card -->
+  <div id="card">
+    <h2 id="banner-title" style="color: #38bdf8; font-size: 1.3rem; margin: 0;">
+      Happy birthday to you, fat ahh Asia.
+    </h2>
+    
+    <!-- Round Giyu Tomioka Picture -->
+    <div class="avatar">
+      <img src="https://avatarfiles.alphacoders.com/350/thumb-1920-350333.jpg" alt="Giyu Tomioka">
+    </div>
+    
+    <button class="next-card-btn" onclick="showEnvelope()">See Your Envelope ✉️</button>
+  </div>
+
+  <!-- Real Interactive 3D Envelope -->
+  <div id="envelope-wrapper" onclick="openEnvelope()">
+    <div class="envelope">
+      <div class="flap-top" id="topFlap"></div>
+      <div class="flap-left"></div>
+      <div class="flap-right"></div>
+      <div class="flap-bottom"></div>
+      
+      <!-- Wax Seal Stamp -->
+      <div class="wax-seal" id="waxSeal">✉️</div>
+      
+      <!-- Letter inside waiting to slide up -->
+      <div class="inner-letter" id="innerLetter">
+        <span style="font-size: 0.95rem;">Read the letter and don't cry on it.</span>
+      </div>
+    </div>
+    <div class="seal-hint">Tap the letter you dummy. I know you're a retard.</div>
+  </div>
+
+  <!-- Unfolded Parchment Letter with Fold Wrinkles -->
+  <div id="letter-page">
+    <div class="parchment">
+      <div class="fold-h"></div>
+      <div class="fold-v"></div>
+
+      <h1>عيد ميلاد سعيد سيسيليا 🎉</h1>
+      <div class="letter-body">
+واش اسيا كبرتي ياه عمرك دكا 17 ومنا شوي وتولي بالغة لوقت يجوز بلخف نشفالك كي كنتي قبل بيام وفلبيام لمهم يلفقمة عيد ميلاد سعيد وان شاء الله دوملك فرحتك وضحكة ومنا (وندوملك انا باينة بسك مثالي وقع)
+لمهم تشفاي كي تعرفنا على بعض واول مشكل بينا؟ it's was funny قد متضاربنا وقع بصح ديما ولينا وهدرنا انتيك وقع مع انك اغلب لوقت غالطة بصح معليش يا retard
+ايييي Btw انا صاحب فكرة ومنا وزيد تعرفيني منعرفش نهدر وكون نقعد نمدح برك نحس بيزار بصح ليوم هذا I will accept that feeling cuz u have a special place in my heart bitch
+قد منمدح منكملش ولا نكمل idk بصح نعرف انك انتيك وعقليتك شابة ومسطحة وقع بصح انتيك تع قصرا ووووو صحباتك انتيك وزلات وزيد يلكيوت شحال من وعد بيتنا مزالو يمشي ومنا
+
+Sooo just know I love u and I'll always will cuz ur a kind soul and deserves good things in life I wish u the best of luck this year ان شاء الله تدي باك انتيك ويجوز شباب بصح حتى واذا مجازش شباب متستسلميش واعرفي حتى واذا مكانش عندك خوك بدم عندك خوك بالبلوتوث قهقهقهقه
+بصح سيريو ني سند ليك تسحقي تلقيني حتى واذا تضاربنا نسمع كاين حاجة نحوس وقع مع انو كاين صوالح خص نهدرو عليهم بصح منيش حاب sooo peace out bitch تشرفت بيك فحياتي
+( يعتبر شرف كبير ليك بسك قليل وين نعتبر ناس صحابي)
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let yesCount = 0;
+    let noCount = 0;
+
+    function doNo() {
+      noCount++;
+      const no = document.getElementById('noBtn');
+      if (noCount === 1) { no.style.position = 'fixed'; no.style.top = '20%'; no.style.left = '70%'; }
+      else if (noCount === 2) { no.style.top = '70%'; no.style.left = '15%'; }
+      else { no.style.display = 'none'; }
+    }
+
+    function doYes() {
+      yesCount++;
+      const yes = document.getElementById('yesBtn');
+      if (yesCount === 1) yes.style.transform = 'scale(1.4)';
+      else if (yesCount === 2) yes.style.transform = 'scale(1.8)';
+      else if (yesCount === 3) yes.style.transform = 'scale(2.4)';
+      else {
+        document.getElementById('main').style.display = 'none';
+        document.getElementById('screen2-bg').style.display = 'block';
+        document.getElementById('card').classList.add('show');
+      }
+    }
+
+    function showEnvelope() {
+      document.getElementById('card').style.display = 'none';
+      document.getElementById('envelope-wrapper').style.display = 'block';
+    }
+
+    let isOpening = false;
+    function openEnvelope() {
+      if (isOpening) return;
+      isOpening = true;
+
+      const seal = document.getElementById('waxSeal');
+      seal.style.opacity = '0';
+      seal.style.transform = 'translateX(-50%) scale(1.5)';
+
+      setTimeout(() => {
+        const flap = document.getElementById('topFlap');
+        flap.style.transform = 'rotateX(180deg)';
+        flap.style.zIndex = '1';
+      }, 300);
+
+      setTimeout(() => {
+        const letter = document.getElementById('innerLetter');
+        letter.style.transform = 'translateY(-140px)';
+        letter.style.zIndex = '6';
+      }, 700);
+
+      setTimeout(() => {
+        document.getElementById('envelope-wrapper').style.display = 'none';
+        document.getElementById('letter-page').style.display = 'block';
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
+
